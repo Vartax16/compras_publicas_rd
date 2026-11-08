@@ -61,23 +61,13 @@ Cada pregunta tiene su query en la carpeta [`sql/`](sql/) y su desarrollo en el 
 | Ministerio de Educación | 813 | 5.859.809.700 | 3,97% |
 | Dirección de Estrategia y Comunicación Gubernamental | 133 | 5.217.836.857 | 3,53% |
 
-## Capturas
+## Dashboard
 
-Dashboard interactivo del proyecto: [`dashboards/Compras públicas RD 2024.lvdash.json`](dashboards/Compras%20p%C3%BAblicas%20RD%202024.lvdash.json) — KPIs, evolución mensual del gasto, top instituciones y proveedores, modalidades, MIPYMES/género y alertas de competencia.
+El análisis interactivo está publicado en el dashboard **Compras públicas RD 2024**:
 
-Capturas de pantalla del dashboard (agregar en `docs/img/`):
+[**Compras públicas RD 2024**](/sql/dashboardsv3/01f1da3c27b01e99a515b32042ad8b89) *(abrir en Databricks)*
 
-![KPIs generales](docs/img/dashboard_kpis.png)
-
-![Evolución mensual del gasto](docs/img/dashboard_gasto_mensual.png)
-
-![Top instituciones y proveedores](docs/img/dashboard_top_instituciones_proveedores.png)
-
-![Modalidades de compra](docs/img/dashboard_modalidades.png)
-
-![Alertas de competencia](docs/img/dashboard_alertas.png)
-
-> Nota: inserta aquí las capturas exportadas del dashboard; los enlaces arriba quedan listos en cuanto copies los PNG a `docs/img/`.
+Incluye: KPIs generales, evolución mensual del gasto, top instituciones y proveedores, modalidades de compra, participación de MIPYMES y mujeres empresarias, y alertas de competencia (un solo oferente / proveedor dominante).
 
 ## Arquitectura del proyecto
 
@@ -85,8 +75,7 @@ Capturas de pantalla del dashboard (agregar en `docs/img/`):
 compras_publicas_rd/
 ├── README.md
 ├── docs/
-│   ├── diccionario_datos.md      # Diccionario de datos completo (14 tablas)
-│   └── img/                       # Capturas del dashboard
+│   └── diccionario_datos.md      # Diccionario de datos completo (14 tablas)
 ├── notebooks/
 │   ├── 01_bronze_ingesta         # JSON OCDS → Delta crudo + auditoría
 │   ├── 02_silver_limpieza        # Aplanado, deduplicación por ocid, flags de calidad
