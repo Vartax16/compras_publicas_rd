@@ -673,7 +673,7 @@
         },
         {
           "widget": {
-            "name": "7541fd18",
+            "name": "tiempos-por-modalidad-1",
             "queries": [
               {
                 "name": "main_query",
@@ -694,6 +694,13 @@
               }
             ],
             "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Tiempos por Modalidad",
+                  "fields": []
+                }
+              },
               "version": 3,
               "mark": {
                 "colors": [

@@ -69,6 +69,7 @@ El análisis interactivo está publicado en el dashboard **Compras públicas RD 
 <img width="1632" height="744" alt="image" src="https://github.com/user-attachments/assets/df999eaf-d1cb-4cdb-9d9a-6296acddd78f" />
 
 
+
 Incluye: KPIs generales, evolución mensual del gasto, top instituciones y proveedores, modalidades de compra, participación de MIPYMES y mujeres empresarias, y alertas de competencia (un solo oferente / proveedor dominante).
 
 ## Arquitectura del proyecto
