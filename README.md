@@ -66,6 +66,8 @@ Cada pregunta tiene su query en la carpeta [`sql/`](sql/) y su desarrollo en el 
 El análisis interactivo está publicado en el dashboard **Compras públicas RD 2024**:
 
 [**Compras públicas RD 2024**](https://dbc-a35aeac3-47ea.cloud.databricks.com/dashboardsv3/01f1da3c27b01e99a515b32042ad8b89/published?o=7474655540169566) *(abrir en Databricks)*
+<img width="1632" height="744" alt="image" src="https://github.com/user-attachments/assets/df999eaf-d1cb-4cdb-9d9a-6296acddd78f" />
+
 
 Incluye: KPIs generales, evolución mensual del gasto, top instituciones y proveedores, modalidades de compra, participación de MIPYMES y mujeres empresarias, y alertas de competencia (un solo oferente / proveedor dominante).
 
