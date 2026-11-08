@@ -1,0 +1,773 @@
+{
+  "datasets": [
+    {
+      "name": "d5fc2a9a",
+      "displayName": "kpis",
+      "queryLines": [
+        "SELECT\r\n",
+        "  COUNT(*)                          AS contratos,\r\n",
+        "  COUNT(DISTINCT proveedor_id)      AS proveedores,\r\n",
+        "  COUNT(DISTINCT institucion_id)    AS instituciones,\r\n",
+        "  ROUND(SUM(monto_contrato))        AS monto_total,\r\n",
+        "  ROUND(AVG(monto_contrato))        AS ticket_promedio\r\n",
+        "FROM compras_rd.gold.fact_contratos\r\n",
+        "WHERE NOT flag_monto_invalido AND moneda = 'DOP'"
+      ]
+    },
+    {
+      "name": "3e4a7158",
+      "displayName": "gasto_mensual",
+      "queryLines": [
+        "SELECT\r\n",
+        "  make_date(df.anio, df.mes, 1)  AS mes_fecha,\r\n",
+        "  di.institucion,\r\n",
+        "  ROUND(SUM(fc.monto_contrato))  AS monto_total\r\n",
+        "FROM compras_rd.gold.fact_contratos fc\r\n",
+        "LEFT JOIN compras_rd.gold.dim_fecha df       ON fc.fecha_key = df.fecha_key\r\n",
+        "LEFT JOIN compras_rd.gold.dim_institucion di ON fc.institucion_id = di.institucion_id\r\n",
+        "WHERE NOT fc.flag_monto_invalido AND fc.moneda = 'DOP'\r\n",
+        "GROUP BY make_date(df.anio, df.mes, 1), di.institucion"
+      ]
+    },
+    {
+      "name": "2c74352f",
+      "displayName": "top_instituciones",
+      "queryLines": [
+        "SELECT institucion, num_contratos, ROUND(monto_total) AS monto_total\r\n",
+        "FROM compras_rd.gold.agg_gasto_institucion\r\n",
+        "WHERE moneda = 'DOP'\r\n",
+        "ORDER BY monto_total DESC\r\n",
+        "LIMIT 15"
+      ]
+    },
+    {
+      "name": "872e416d",
+      "displayName": "modalidades",
+      "queryLines": [
+        "SELECT COALESCE(m.modalidad, 'sin dato') AS modalidad,\r\n",
+        "       COUNT(*) AS contratos,\r\n",
+        "       ROUND(SUM(fc.monto_contrato)) AS monto_total\r\n",
+        "FROM compras_rd.gold.fact_contratos fc\r\n",
+        "LEFT JOIN compras_rd.gold.dim_modalidad m ON fc.modalidad_key = m.modalidad_key\r\n",
+        "WHERE NOT fc.flag_monto_invalido AND fc.moneda = 'DOP'\r\n",
+        "GROUP BY m.modalidad"
+      ]
+    },
+    {
+      "name": "d31dfc84",
+      "displayName": "escala",
+      "queryLines": [
+        "SELECT COALESCE(p.escala, 'sin dato') AS escala,\r\n",
+        "       COUNT(*) AS contratos,\r\n",
+        "       ROUND(SUM(fc.monto_contrato)) AS monto_total\r\n",
+        "FROM compras_rd.gold.fact_contratos fc\r\n",
+        "LEFT JOIN compras_rd.gold.dim_proveedor p ON fc.proveedor_id = p.proveedor_id\r\n",
+        "WHERE NOT fc.flag_monto_invalido AND fc.moneda = 'DOP'\r\n",
+        "GROUP BY p.escala"
+      ]
+    },
+    {
+      "name": "66d4d4a4",
+      "displayName": "genero",
+      "queryLines": [
+        "SELECT COALESCE(p.genero, 'sin dato') AS genero,\r\n",
+        "       COUNT(*) AS contratos,\r\n",
+        "       ROUND(SUM(fc.monto_contrato)) AS monto_total\r\n",
+        "FROM compras_rd.gold.fact_contratos fc\r\n",
+        "LEFT JOIN compras_rd.gold.dim_proveedor p ON fc.proveedor_id = p.proveedor_id\r\n",
+        "WHERE NOT fc.flag_monto_invalido AND fc.moneda = 'DOP'\r\n",
+        "GROUP BY p.genero\r\n"
+      ]
+    },
+    {
+      "name": "37d10d32",
+      "displayName": "top_proveedores",
+      "queryLines": [
+        "SELECT nombre, escala, num_contratos,\r\n",
+        "       ROUND(monto_total) AS monto_total,\r\n",
+        "       ROUND(participacion, 4) AS participacion\r\n",
+        "FROM compras_rd.gold.agg_proveedores\r\n",
+        "WHERE moneda = 'DOP'\r\n",
+        "ORDER BY monto_total DESC\r\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "4a6d56f0",
+      "displayName": "tiempos",
+      "queryLines": [
+        "SELECT\r\n",
+        "  COALESCE(m.modalidad, 'sin dato')                    AS modalidad,\r\n",
+        "  COUNT(*)                                             AS procesos,\r\n",
+        "  percentile_approx(fp.dias_hasta_adjudicacion, 0.5)   AS dias_mediana\r\n",
+        "FROM compras_rd.gold.fact_procesos fp\r\n",
+        "LEFT JOIN compras_rd.gold.dim_modalidad m ON fp.modalidad_key = m.modalidad_key\r\n",
+        "WHERE fp.dias_hasta_adjudicacion >= 0\r\n",
+        "GROUP BY m.modalidad\r\n",
+        "HAVING COUNT(*) >= 30"
+      ]
+    },
+    {
+      "name": "63f21e0a",
+      "displayName": "proveedoresxregion",
+      "queryLines": [
+        "SELECT COALESCE(region, 'sin dato') AS region, COUNT(*) AS proveedores\r\n",
+        "FROM compras_rd.gold.dim_proveedor\r\n",
+        "GROUP BY region\r\n",
+        "ORDER BY proveedores DESC;"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "5a194a9a",
+      "displayName": "Dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "contratos",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d5fc2a9a",
+                  "fields": [
+                    {
+                      "name": "sum(contratos)",
+                      "expression": "SUM(`contratos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": {
+                  "value": "Contratos",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(contratos)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "monto-total",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d5fc2a9a",
+                  "fields": [
+                    {
+                      "name": "sum(monto_total)",
+                      "expression": "SUM(`monto_total`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Monto Total",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(monto_total)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ticket-promedio",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d5fc2a9a",
+                  "fields": [
+                    {
+                      "name": "sum(ticket_promedio)",
+                      "expression": "SUM(`ticket_promedio`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Ticket Promedio",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(ticket_promedio)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "proveedores",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d5fc2a9a",
+                  "fields": [
+                    {
+                      "name": "sum(proveedores)",
+                      "expression": "SUM(`proveedores`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Proveedores",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(proveedores)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "top-15-instituciones",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2c74352f",
+                  "fields": [
+                    {
+                      "name": "institucion",
+                      "expression": "`institucion`"
+                    },
+                    {
+                      "name": "sum(monto_total)",
+                      "expression": "SUM(`monto_total`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 15 instituciones ",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "institucion",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(monto_total)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 6,
+            "width": 5,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "monto-por-modalidad",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "872e416d",
+                  "fields": [
+                    {
+                      "name": "modalidad",
+                      "expression": "`modalidad`"
+                    },
+                    {
+                      "name": "sum(monto_total)",
+                      "expression": "SUM(`monto_total`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Monto por Modalidad",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "modalidad",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(monto_total)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 1,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "e4ba26ee",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "# Resumen"
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "escala-del-proveedor",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d31dfc84",
+                  "fields": [
+                    {
+                      "name": "sum(monto_total)",
+                      "expression": "SUM(`monto_total`)"
+                    },
+                    {
+                      "name": "escala",
+                      "expression": "`escala`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Escala del Proveedor",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(monto_total)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "escala",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "genero-del-proveedor",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "66d4d4a4",
+                  "fields": [
+                    {
+                      "name": "genero",
+                      "expression": "`genero`"
+                    },
+                    {
+                      "name": "sum(monto_total)",
+                      "expression": "SUM(`monto_total`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Género del proveedor",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "genero",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(monto_total)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 6,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "top-10-proveedores-1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "37d10d32",
+                  "fields": [
+                    {
+                      "name": "nombre",
+                      "expression": "`nombre`"
+                    },
+                    {
+                      "name": "num_contratos",
+                      "expression": "`num_contratos`"
+                    },
+                    {
+                      "name": "monto_total",
+                      "expression": "`monto_total`"
+                    },
+                    {
+                      "name": "participacion",
+                      "expression": "`participacion`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`monto_total`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 10 Proveedores",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "nombre"
+                  },
+                  {
+                    "fieldName": "num_contratos"
+                  },
+                  {
+                    "fieldName": "monto_total"
+                  },
+                  {
+                    "fieldName": "participacion"
+                  }
+                ],
+                "rowOrder": [
+                  {
+                    "by": "column",
+                    "field": {
+                      "index": 2
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "7541fd18",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4a6d56f0",
+                  "fields": [
+                    {
+                      "name": "modalidad",
+                      "expression": "`modalidad`"
+                    },
+                    {
+                      "name": "sum(dias_mediana)",
+                      "expression": "SUM(`dias_mediana`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "modalidad",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(dias_mediana)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 1,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "674bc334",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "# Compras públicas RD 2024"
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "566910e4",
+      "displayName": "Global Filters",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
